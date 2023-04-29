@@ -4,15 +4,18 @@
 
 pkgname=openmc
 pkgver=0.13.3
-pkgnamever=${pkgname}-${pkgver}
 pkgrel=1
-pkgdesc="The OpenMC project aims to provide a fully-featured Monte Carlo particle 
+pkgdesc="The OpenMC project aims to provide a fully-featured Monte Carlo particle
 		 transport code based on modern methods."
 arch=('x86_64')
 url="https://github.com/openmc-dev/openmc"
 license=('MIT')
-
-source=("${pkgnamever}.tar.gz::https://github.com/openmc-dev/openmc/archive/refs/tags/v${pkgver}.tar.gz")
+srcfolder=${pkgname}_source
+source=("${srcfolder}::git+${url}.git#branch=master")
+pkgver() {
+  cd "$srcfolder"
+  git describe --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-.*//'
+}
 
 md5sums=('SKIP')
 
@@ -23,16 +26,18 @@ depends=(
 	python-matplotlib
 	python-uncertainties
 	embree
-	libxrender 
-	libxcursor 
-	libxft 
-	libxinerama 
-	freecad 
+	libxrender
+	libxcursor
+	libxft
+	libxinerama
+	freecad
 	glu
 	openssh
 	dagmc-git
 	nuclear-data
+	#python-cad_to_openmc
 )
+
 makedepends=(
     cmake
     git
@@ -41,15 +46,17 @@ makedepends=(
     python-setuptools
 )
 
-provides=("${pkgnamever}")
+provides=("${pkgname}-${pkgver}")
 
 conflicts=(
 	openmc-git
 )
 
 build() {
-    cd $srcdir/${pkgnamever}
-    mkdir build && cd build
+    cd $srcdir/${srcfolder}
+	rm build -rf
+    mkdir build
+	cd build
     cmake .. -DOPENMC_USE_DAGMC=ON \
              -DDAGMC_ROOT=/opt/DAGMC \
              -DOPENMC_USE_MPI=ON \
@@ -59,9 +66,8 @@ build() {
 }
 
 package() {
-	cd $srcdir/${pkgnamever}/build 
+	cd $srcdir/${srcfolder}/build
 	make DESTDIR="$pkgdir/" install
 	pip install ../
-	mv $srcdir/${pkgnamever} $pkgdir/opt/openmc
-	ln -s /opt/openmc/bin/openmc /usr/bin/
+	mv $srcdir/${srcfolder} $pkgdir/opt/openmc
 }
