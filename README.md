@@ -66,6 +66,18 @@ ssh-copy-id USER@HOST3
 ...
 ```
 
+Para construir a API do python no computador pai:
+
+```
+python -m venv openmc-env
+source openmc-env/bin/activate
+cp -r /opt/openmc/openmc-src/ ~/
+cd openmc-src/
+python -m pip install .
+rm -rf ~/openmc-src/
+```
+
+
 ## Conda Install
 
 Instalação via conda:
