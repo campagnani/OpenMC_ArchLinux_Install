@@ -1,73 +1,55 @@
-# Maintainer: Thalles Oliveira Campagnani <thallescampagnani at gmail dot com>
-
-# Original Source: https://aur.archlinux.org/packages/openmc-git
-
-pkgname=openmc
-pkgver=0.13.3
+# Maintainer: Gavin Ridley <gavin dot keith dot ridley at gmail dot com>
+# Maintainer: Luke Labrie-Cleary <luke dot cleary at copenhagenatomics dot com>
+pkgname=openmc-ompi-nopy
+pkgver=v0.14.0
 pkgrel=1
-pkgdesc="The OpenMC project aims to provide a fully-featured Monte Carlo particle
-		 transport code based on modern methods."
+pkgdesc="OpenMC build with OpenMPI and but without python env."
 arch=('x86_64')
 url="https://github.com/openmc-dev/openmc"
 license=('MIT')
-srcfolder=${pkgname}_source
-source=("${srcfolder}::git+${url}.git#branch=master")
-pkgver() {
-  cd "$srcfolder"
-  git describe --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-.*//'
-}
+
+source=("${pkgname}::git+${url}.git")
 
 md5sums=('SKIP')
 
-depends=(
-	python-lxml
-	python-scipy
-	python-pandas
-	python-matplotlib
-	python-uncertainties
-	embree
-	libxrender
-	libxcursor
-	libxft
-	libxinerama
-	freecad
-	glu
+depends=( 
+	hdf5
 	openssh
-	dagmc-git
-	nuclear-data
-	#python-cad_to_openmc
 )
-
 makedepends=(
-    cmake
+    base-devel
+	cmake
     git
-    python
-    python-numpy
-    python-setuptools
 )
 
-provides=("${pkgname}-${pkgver}")
-
-conflicts=(
-	openmc-git
-)
+provides=("${pkgname%-pkgver}")
 
 build() {
-    cd $srcdir/${srcfolder}
-	rm build -rf
-    mkdir build
-	cd build
-    cmake .. -DOPENMC_USE_DAGMC=ON \
-             -DDAGMC_ROOT=/opt/DAGMC \
-             -DOPENMC_USE_MPI=ON \
+    cd $srcdir/${pkgname}
+	git checkout master
+    mkdir build && cd build
+    cmake .. -DOPENMC_USE_MPI=ON \
              -DHDF5_PREFER_PARALLEL=ON \
-	     	 -DCMAKE_INSTALL_PREFIX=/opt/openmc
-    make
+	     	 -DCMAKE_INSTALL_PREFIX=/opt/openmc	\
+			 -DCMAKE_BUILD_TYPE=Release
+	_ccores=$(nproc)
+	# check if _ccores is a positive integer, if not, serial build
+	if [[ "${_ccores}" =~ ^[1-9][0-9]*$ ]]; then
+		make -j ${_ccores}
+	else
+		make
+	fi
+
+
 }
 
 package() {
-	cd $srcdir/${srcfolder}/build
+	cd $srcdir/${pkgname}/build 
 	make DESTDIR="$pkgdir/" install
-	pip install ../
-	mv $srcdir/${srcfolder} $pkgdir/opt/openmc
+	cp -r $srcdir/${pkgname} $pkgdir/opt/openmc
+	mv $pkgdir/opt/openmc/${pkgname} $pkgdir/opt/openmc/openmc-src 
+	rm -rf $pkgdir/opt/openmc/openmc-source/build
+	mkdir $pkgdir/bin
+	cd $pkgdir/bin
+	ln -s /opt/openmc/openmc
 }
