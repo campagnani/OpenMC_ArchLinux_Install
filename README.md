@@ -57,6 +57,15 @@ ssh USER@HOST
 pacman -S openmc-ompi-nopy-v*.pkg.tar.zst
 ```
 
+No computador pai, dê acesso SSH sem senha aos computadores filhos (será necessário pelo MPI para computação em cluster):
+```
+ssh-keygen -t rsa #EXECUTE ESSE COMANDO APENAS UMA VEZ NA VIDA (PARA NÃO SOBRESCREVER A CHAVE CRIADA)
+ssh-copy-id USER@HOST1
+ssh-copy-id USER@HOST2
+ssh-copy-id USER@HOST3
+...
+```
+
 ## Conda Install
 
 Instalação via conda:
