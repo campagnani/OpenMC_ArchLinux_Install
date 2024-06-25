@@ -19,13 +19,15 @@ yay -S openmc-git
 
 ## Compilando e instalando versão para cluster
 
-Essa versão é mais simples (menos dependências, não instala python, etc) mas ter suporte a paralelismo. Configuração do PKGBUILD:
+Essa versão é mais simples para cluster (menos dependências, não instala python, etc) mas tem o suporte a paralelismo. Entretanto sem paralelismo de HDF5 por causa do seguinte erro: [OpenMC Forum #606](https://openmc.discourse.group/t/depletion-simulation-on-supercomputer-gets-stuck-between-depletion-steps/606) --> [GitHub #1566](https://github.com/openmc-dev/openmc/pull/1566)
+
+Configuração do PKGBUILD:
 | pkgname               | openmc-ompi-nopy    |
 |-----------------------|---------------------|
 | pkgver                | Brench "master"     |
 | Build type            | Release             |
 | MPI enabled           | yes                 |
-| Parallel HDF5 enabled | yes                 |
+| Parallel HDF5 enabled | no                  |
 | PNG support           | yes                 |
 | DAGMC support         | no                  |
 | libMesh support       | no                  |
@@ -44,7 +46,7 @@ cd OpenMC_ArchLinux_Install
 makepkg -s
 ```
 
-Isso criará um pacote, algo como `openmc-ompi-nopy-v0.14.0-1-x86_64.pkg.tar.zs`. Envie esse pacote para todos as máquinas do clusler com:
+Isso criará um pacote, algo como `openmc-ompi-nopy-v0.15.0-1-x86_64.pkg.tar.zs`. Envie esse pacote para todos as máquinas do clusler com:
 
 ```
 scp openmc-ompi-nopy-v*.pkg.tar.zst  USER@HOST:/home/openmc
