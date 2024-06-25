@@ -31,6 +31,7 @@ makedepends=(
 
 conflicts=(
     openmc-git
+    hdf5-openmpi
 )
 
 provides=("${pkgname%-pkgver}")
