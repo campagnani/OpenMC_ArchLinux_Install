@@ -1,7 +1,7 @@
 pkgname=openmc-ompi-nopy
-pkgver=v0.14.0
+pkgver=v0.15.0
 pkgrel=1
-pkgdesc="OpenMC build with OpenMPI and but without python env."
+pkgdesc="OpenMC build with OpenMPI but without hdf5-openmpi, and without python env."
 arch=('x86_64')
 url="https://github.com/openmc-dev/openmc"
 license=('MIT')
@@ -17,7 +17,7 @@ pkgver() {
 md5sums=('SKIP')
 
 depends=( 
-    hdf5-openmpi
+    hdf5
     openssh
     fmt
 )
@@ -39,7 +39,7 @@ build() {
     cd $srcdir/${pkgname}
     rm -rf build
     mkdir build && cd build
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DOPENMC_USE_MPI=ON -DHDF5_PREFER_PARALLEL=ON -DCMAKE_INSTALL_PREFIX=/opt/openmc
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DOPENMC_USE_MPI=ON -DCMAKE_INSTALL_PREFIX=/opt/openmc
 
     _ccores=$(nproc)
     # check if _ccores is a positive integer, if not, serial build
