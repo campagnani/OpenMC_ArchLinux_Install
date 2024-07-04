@@ -59,8 +59,10 @@ package() {
     make DESTDIR="$pkgdir/" install                   #Execute o comando "make intall" mas com diretório destino como o pacote "$pkgdir/"
     rm -rf $srcdir/${pkgname}/build                   #Sendo a instalação bem sucedida remova os arquivos de compilação
     mkdir $pkgdir/opt/openmc/openmc-src               #Crie um diretório para hospedar o código fonte no diretório de instalação dentro do pacote
-    cp -r $srcdir/${pkgname}/* $pkgdir/opt/openmc/openmc-src #Copie o código fonte
-    rm -rf $srcdir                                    #Delete o código fonte
+    mv $srcdir/${pkgname}/* $pkgdir/opt/openmc/openmc-src #Copie o código fonte para dentro da pasta openmc-src
+    rm -rf $srcdir                                    #Delete as pastas do código fonte
     mkdir -p $pkgdir/usr/bin                          #Crie o diretório /usr/bin no pacote
     ln -s /opt/openmc/bin/openmc $pkgdir/usr/bin      #Crie um link simbólico para o binário do openmc em /usr/bin
+    mkdir -p $pkgdir/lib                              #Crie o diretório /lib no pacote
+    ln -s /opt/openmc/lib/libopenmc.so $pkgdir/lib    #Crie um link simbólico para o binário do openmc em /usr/bin
 }
