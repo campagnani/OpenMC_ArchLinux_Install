@@ -20,6 +20,8 @@ depends=(
     hdf5
     openssh
     fmt
+    openmpi
+    pugixml
 )
 
 makedepends=(
@@ -27,6 +29,7 @@ makedepends=(
     cmake
     git
     fmt
+    openmpi
 )
 
 conflicts=(
