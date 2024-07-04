@@ -61,8 +61,7 @@ package() {
     mkdir $pkgdir/opt/openmc/openmc-src               #Crie um diretório para hospedar o código fonte no diretório de instalação dentro do pacote
     mv $srcdir/${pkgname}/* $pkgdir/opt/openmc/openmc-src #Copie o código fonte para dentro da pasta openmc-src
     rm -rf $srcdir                                    #Delete as pastas do código fonte
-    mkdir -p $pkgdir/usr/bin                          #Crie o diretório /usr/bin no pacote
+    mkdir -p $pkgdir/usr/bin $pkgdir/usr/local/lib    #Crie os diretórios /usr/bin e /usr/local/lib no pacote
     ln -s /opt/openmc/bin/openmc $pkgdir/usr/bin      #Crie um link simbólico para o binário do openmc em /usr/bin
-    mkdir -p $pkgdir/lib                              #Crie o diretório /lib no pacote
-    ln -s /opt/openmc/lib/libopenmc.so $pkgdir/lib    #Crie um link simbólico para o binário do openmc em /usr/bin
+    ln -s /opt/openmc/lib/libopenmc.so $pkgdir/usr/local/lib #Crie um link simbólico para a biblioteca do openmc em /usr/local/lib
 }
