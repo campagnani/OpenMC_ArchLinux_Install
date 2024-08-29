@@ -43,7 +43,7 @@ PKBUILD baseado em https://aur.archlinux.org/packages/openmc-git
 ```
 git clone https://github.com/campagnani/OpenMC_ArchLinux_Install
 cd OpenMC_ArchLinux_Install
-makepkg -s
+makepkg -s #Ou -si para instalar direto no computador pai
 ```
 
 Isso criará um pacote, algo como `openmc-ompi-nopy-v0.15.0-1-x86_64.pkg.tar.zs`. Envie esse pacote para todos as máquinas do clusler com:
