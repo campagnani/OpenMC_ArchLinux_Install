@@ -56,7 +56,7 @@ Acesse a cada máquina com SSH e depois instale:
 
 ```
 ssh USER@HOST
-pacman -S openmc-ompi-nopy-v*.pkg.tar.zst
+pacman -U openmc-ompi-nopy-v*.pkg.tar.zst
 ```
 
 No computador pai, dê acesso SSH sem senha aos computadores filhos (será necessário pelo MPI para computação em cluster):
