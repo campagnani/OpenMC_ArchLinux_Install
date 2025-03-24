@@ -1,0 +1,388 @@
+pkgname=openmc-bin
+pkgver=v0.15.2
+pkgrel=1
+pkgdesc="OpenMC build with OpenMPI but without hdf5-openmpi, and without python env."
+arch=('x86_64')
+url="https://github.com/openmc-dev/openmc"
+license=('MIT')
+
+source=("${pkgname}::git+${url}.git")
+
+pkgver() {
+    cd "$pkgname"
+    git checkout master > /dev/null  #Mude o repostório para a brench master (última versão estável) #Necessário descartar a saída padrão
+    git describe --tags | sed 's/-.*//'
+}
+
+md5sums=('SKIP')
+
+depends=( 
+    openssh
+    pugixml
+)
+
+makedepends=(
+    fmt
+    hdf5
+    openmpi
+    libpng
+    zlib
+    base-devel
+    cmake
+    git
+)
+
+conflicts=(
+    hdf5-openmpi
+)
+
+provides=("${pkgname%-pkgver}")
+
+build() {
+    cd $srcdir/${pkgname}   #Vá para o diretório do pacote
+    rm -rf build            #Garantir que não tem resquicios de instalações passadas
+    mkdir build             #Criando pasta para arquivos de compilação
+    cd build                #Entrando na pasta
+    
+    # Construindo com cmake
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DHDF5_PREFER_PARALLEL=OFF -DOPENMC_USE_MPI=ON -DCMAKE_INSTALL_PREFIX=/opt/openmc-bin
+
+    # Compilando com a quantidade de núcloes máxima disponível do processador
+    _ccores=$(nproc)
+    if [[ "${_ccores}" =~ ^[1-9][0-9]*$ ]]; then # check if _ccores is a positive integer, if not, serial build
+        make -j ${_ccores}
+    else
+        make
+    fi
+}
+
+package() {
+    cd $srcdir/${pkgname}/build                                     #Vá para o diretório build
+    make DESTDIR="$pkgdir/" install                                 #Execute o comando "make intall" mas com diretório destino como o pacote "$pkgdir/"
+    rm -rf $srcdir/${pkgname}/build                                 #Sendo a instalação bem sucedida remova os arquivos de compilação
+    #mkdir $pkgdir/opt/openmc-bin/openmc-src                        #Crie um diretório para hospedar o código fonte no diretório de instalação dentro do pacote
+    mv $srcdir/${pkgname}/ $pkgdir/opt/openmc-bin/openmc-src/       #Copie o código fonte para dentro da pasta openmc-src
+    rm -rf $srcdir                                                  #Delete as pastas do código fonte
+    mkdir -p $pkgdir/usr/bin #$pkgdir/usr/local/lib                 #Crie os diretórios /usr/bin e /usr/local/lib no pacote
+    ln -s /opt/openmc-bin/bin/openmc $pkgdir/usr/bin                #Crie um link simbólico para o binário do openmc em /usr/bin
+    #ln -s /opt/openmc-bin/lib/libopenmc.so $pkgdir/usr/local/lib   #ANTIGO: Crie um link simbólico para a biblioteca do openmc em /usr/local/lib
+    #export LD_LIBRARY_PATH="/opt/openmc-bin/lib/:$LD_LIBRARY_PATH" #Ao invés disso, coloque /opt/openmc-bin/lib/ na LD_LIBRARY_PATH, e copie os arquivos das bibliotecas dependentes para lá
+    
+    #Bibliotecas dependentes de HDF5
+    cp /usr/lib/libhdf5*        $pkgdir/opt/openmc-bin/lib/         #hdf5
+    cp /usr/lib/libz*           $pkgdir/opt/openmc-bin/lib/         #zlib
+    cp /usr/lib/libaec*         $pkgdir/opt/openmc-bin/lib/         #libaec
+    cp /usr/lib/libsz*          $pkgdir/opt/openmc-bin/lib/         #libaec
+
+    #Bibliotecas dependentes de FMT
+    cp /usr/lib/libfmt*         $pkgdir/opt/openmc-bin/lib/         #fmt
+    
+    #Bibliotecas dependentes de LIBPNG
+    cp /usr/lib/libpng*         $pkgdir/opt/openmc-bin/lib/         #libpng
+    
+    #Outros
+    cp /usr/lib/libdl.a         $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libm.so         $pkgdir/opt/openmc-bin/lib/
+
+    #Bibliotecas dependentes de OpenMPI
+    #Cadeia de decaimentos de OpenMPI
+    #gcc-libs
+    #glibc
+    #hwloc
+    #libevent
+    #libfabric
+    #libnl
+    #openpmix
+    #openucx
+    #prrte
+    #
+    #
+    #libpciaccess
+    #libtool
+    #ncurses
+    #systemd-libs 
+    #openssl
+    #numactl
+    #zstd  
+
+
+
+
+
+    #openmpi
+    #usr/lib/libmpi.so
+    #usr/lib/libmpi.so.40
+    #usr/lib/libmpi.so.40.40.7
+    #usr/lib/libmpi_mpifh.so
+    #usr/lib/libmpi_mpifh.so.40
+    #usr/lib/libmpi_mpifh.so.40.40.1
+    #usr/lib/libmpi_usempi_ignore_tkr.so
+    #usr/lib/libmpi_usempi_ignore_tkr.so.40
+    #usr/lib/libmpi_usempi_ignore_tkr.so.40.40.1
+    #usr/lib/libmpi_usempif08.so
+    #usr/lib/libmpi_usempif08.so.40
+    #usr/lib/libmpi_usempif08.so.40.40.3
+    #usr/lib/libopen-pal.so
+    #usr/lib/libopen-pal.so.80
+    #usr/lib/libopen-pal.so.80.0.5
+    #usr/lib/liboshmem.so
+    #usr/lib/liboshmem.so.40
+    #usr/lib/liboshmem.so.40.40.4
+    #usr/lib/openmpi/libompi_dbg_msgq.so
+    #usr/lib/openmpi/mca_accelerator_cuda.so
+    #usr/lib/openmpi/mca_accelerator_rocm.so
+    #usr/lib/openmpi/mca_btl_smcuda.so
+    #usr/lib/openmpi/mca_coll_ucc.so
+    #usr/lib/openmpi/mca_rcache_gpusm.so
+    #usr/lib/openmpi/mca_rcache_rgpusm.so
+    #usr/lib/openmpi/mca_scoll_ucc.so
+    cp /usr/lib/libmpi*         $pkgdir/opt/openmc-bin/lib/         #openmpi
+    cp /usr/lib/libopen-pal*    $pkgdir/opt/openmc-bin/lib/         #openmpi
+    cp /usr/lib/liboshmem*      $pkgdir/opt/openmc-bin/lib/         #openmpi
+    cp -r /usr/lib/openmpi/     $pkgdir/opt/openmc-bin/lib/         #openmpi
+
+
+    #hwloc
+    #usr/lib/hwloc/hwloc_pci.so
+    #usr/lib/hwloc/hwloc_xml_libxml.so
+    #usr/lib/libhwloc.so
+    #usr/lib/libhwloc.so.15
+    #usr/lib/libhwloc.so.15.9.0
+    cp -r /usr/lib/hwloc/ $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libhwloc* $pkgdir/opt/openmc-bin/lib/
+
+
+
+
+    #libevent
+    #usr/lib/libevent-2.1.so
+    #usr/lib/libevent-2.1.so.7
+    #usr/lib/libevent-2.1.so.7.0.1
+    #usr/lib/libevent.so
+    #usr/lib/libevent_core-2.1.so
+    #usr/lib/libevent_core-2.1.so.7
+    #usr/lib/libevent_core-2.1.so.7.0.1
+    #usr/lib/libevent_core.so
+    #usr/lib/libevent_extra-2.1.so
+    #usr/lib/libevent_extra-2.1.so.7
+    #usr/lib/libevent_extra-2.1.so.7.0.1
+    #usr/lib/libevent_extra.so
+    #usr/lib/libevent_openssl-2.1.so
+    #usr/lib/libevent_openssl-2.1.so.7
+    #usr/lib/libevent_openssl-2.1.so.7.0.1
+    #usr/lib/libevent_openssl.so
+    #usr/lib/libevent_pthreads-2.1.so
+    #usr/lib/libevent_pthreads-2.1.so.7
+    #usr/lib/libevent_pthreads-2.1.so.7.0.1
+    #usr/lib/libevent_pthreads.so
+    cp /usr/lib/libevent_* $pkgdir/opt/openmc-bin/lib/
+
+
+
+    #libfabric
+    #usr/lib/libfabric.so
+    #usr/lib/libfabric.so.1
+    #usr/lib/libfabric.so.1.27.0
+    cp /usr/lib/libfabric* $pkgdir/opt/openmc-bin/lib/
+
+
+
+    #libnl
+    #usr/lib/libnl-3.so
+    #usr/lib/libnl-3.so.200
+    #usr/lib/libnl-3.so.200.26.0
+    #usr/lib/libnl-cli-3.so
+    #usr/lib/libnl-cli-3.so.200
+    #usr/lib/libnl-cli-3.so.200.26.0
+    #usr/lib/libnl-genl-3.so
+    #usr/lib/libnl-genl-3.so.200
+    #usr/lib/libnl-genl-3.so.200.26.0
+    #usr/lib/libnl-idiag-3.so
+    #usr/lib/libnl-idiag-3.so.200
+    #usr/lib/libnl-idiag-3.so.200.26.0
+    #usr/lib/libnl-nf-3.so
+    #usr/lib/libnl-nf-3.so.200
+    #usr/lib/libnl-nf-3.so.200.26.0
+    #usr/lib/libnl-route-3.so
+    #usr/lib/libnl-route-3.so.200
+    #usr/lib/libnl-route-3.so.200.26.0
+    #usr/lib/libnl-xfrm-3.so
+    #usr/lib/libnl-xfrm-3.so.200
+    #usr/lib/libnl-xfrm-3.so.200.26.0
+    #usr/lib/libnl/
+    #usr/lib/libnl/cli/
+    #usr/lib/libnl/cli/cls/
+    #usr/lib/libnl/cli/cls/basic.so
+    #usr/lib/libnl/cli/cls/cgroup.so
+    #usr/lib/libnl/cli/qdisc/
+    #usr/lib/libnl/cli/qdisc/bfifo.so
+    #usr/lib/libnl/cli/qdisc/blackhole.so
+    #usr/lib/libnl/cli/qdisc/fq_codel.so
+    #usr/lib/libnl/cli/qdisc/hfsc.so
+    #usr/lib/libnl/cli/qdisc/htb.so
+    #usr/lib/libnl/cli/qdisc/ingress.so
+    #usr/lib/libnl/cli/qdisc/pfifo.so
+    #usr/lib/libnl/cli/qdisc/plug.so
+    cp /usr/lib/libnl-* $pkgdir/opt/openmc-bin/lib/
+    cp -r /usr/lib/libnl/ $pkgdir/opt/openmc-bin/lib/
+
+
+
+    #openpmix
+    #usr/lib/libpmix.so
+    #usr/lib/libpmix.so.2
+    #usr/lib/libpmix.so.2.13.6
+    #usr/lib/pmix/pmix_mca_pcompress_zlib.so
+    cp /usr/lib/libpmix* $pkgdir/opt/openmc-bin/lib/
+    cp -r /usr/lib/pmix/ $pkgdir/opt/openmc-bin/lib/
+
+
+    #openucx
+    #usr/lib/libucm.so
+    #usr/lib/libucm.so.0
+    #usr/lib/libucm.so.0.0.0
+    #usr/lib/libucp.so
+    #usr/lib/libucp.so.0
+    #usr/lib/libucp.so.0.0.0
+    #usr/lib/libucs.so
+    #usr/lib/libucs.so.0
+    #usr/lib/libucs.so.0.0.0
+    #usr/lib/libucs_signal.so
+    #usr/lib/libucs_signal.so.0
+    #usr/lib/libucs_signal.so.0.0.0
+    #usr/lib/libuct.so
+    #usr/lib/libuct.so.0
+    #usr/lib/libuct.so.0.0.0
+    cp /usr/lib/libucm* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libucp* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libucs* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libuct* $pkgdir/opt/openmc-bin/lib/
+
+
+
+    #prrte
+    #usr/lib/libprrte.so
+    #usr/lib/libprrte.so.3
+    #usr/lib/libprrte.so.3.0.8
+    cp /usr/lib/libprrte* $pkgdir/opt/openmc-bin/lib/
+
+
+
+
+    #libpciaccess
+    #usr/lib/libpciaccess.so
+    #usr/lib/libpciaccess.so.0
+    #usr/lib/libpciaccess.so.0.11.1
+    cp /usr/lib/libpciaccess* $pkgdir/opt/openmc-bin/lib/
+
+
+
+    #libtool
+    #usr/lib/libltdl.so
+    #usr/lib/libltdl.so.7
+    #usr/lib/libltdl.so.7.3.3
+    cp /usr/lib/libltdl* $pkgdir/opt/openmc-bin/lib/
+
+
+
+
+    #ncurses
+    #usr/lib/libcurses.so
+    #usr/lib/libcursesw.so
+    #usr/lib/libform.so
+    #usr/lib/libformw.so
+    #usr/lib/libformw.so.6
+    #usr/lib/libformw.so.6.5
+    #usr/lib/libformw_g.a
+    #usr/lib/libmenu.so
+    #usr/lib/libmenuw.so
+    #usr/lib/libmenuw.so.6
+    #usr/lib/libmenuw.so.6.5
+    #usr/lib/libmenuw_g.a
+    #usr/lib/libncurses++.so
+    #usr/lib/libncurses++w.so
+    #usr/lib/libncurses++w.so.6
+    #usr/lib/libncurses++w.so.6.5
+    #usr/lib/libncurses++w_g.a
+    #usr/lib/libncurses.so
+    #usr/lib/libncursesw.so
+    #usr/lib/libncursesw.so.6
+    #usr/lib/libncursesw.so.6.5
+    #usr/lib/libncursesw_g.a
+    #usr/lib/libpanel.so
+    #usr/lib/libpanelw.so
+    #usr/lib/libpanelw.so.6
+    #usr/lib/libpanelw.so.6.5
+    #usr/lib/libpanelw_g.a
+    #usr/lib/libtic.so
+    #usr/lib/libtic.so.6
+    #usr/lib/libtinfo.so
+    #usr/lib/libtinfo.so.6
+    cp /usr/lib/libcurses* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libcursesw* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libform* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libformw* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libmenu* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libmenuw* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libncurses++* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libncurses++w* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libncurses* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libncursesw* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libpanel* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libpanelw* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libtic* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libtinfo* $pkgdir/opt/openmc-bin/lib/
+
+
+
+
+    #systemd-libs
+    #usr/lib/libnss_myhostname.so.2
+    #usr/lib/libnss_mymachines.so.2
+    #usr/lib/libnss_resolve.so.2
+    #usr/lib/libnss_systemd.so.2
+    #usr/lib/libsystemd.so
+    #usr/lib/libsystemd.so.0
+    #usr/lib/libsystemd.so.0.40.0
+    #usr/lib/libudev.so
+    #usr/lib/libudev.so.1
+    #usr/lib/libudev.so.1.7.10
+    cp /usr/lib/libnss_* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libsystemd* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libudev* $pkgdir/opt/openmc-bin/lib/
+
+
+
+
+    #openssl
+    #usr/lib/engines-3/afalg.so
+    #usr/lib/engines-3/capi.so
+    #usr/lib/engines-3/loader_attic.so
+    #usr/lib/engines-3/padlock.so
+    #usr/lib/libcrypto.so
+    #usr/lib/libcrypto.so.3
+    #usr/lib/libssl.so
+    #usr/lib/libssl.so.3
+    #usr/lib/ossl-modules/
+    #usr/lib/ossl-modules/legacy.so
+    cp -r /usr/lib/engines-3/ $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libcrypto* $pkgdir/opt/openmc-bin/lib/
+    cp /usr/lib/libssl* $pkgdir/opt/openmc-bin/lib/
+    cp -r /usr/lib/ossl-modules/ $pkgdir/opt/openmc-bin/lib/
+
+
+    #numactl
+    #usr/lib/libnuma.so
+    #usr/lib/libnuma.so.1
+    #usr/lib/libnuma.so.1.0.0
+    cp /usr/lib/libnuma* $pkgdir/opt/openmc-bin/lib/
+
+
+
+    #zstd
+    #usr/lib/libzstd.so
+    #usr/lib/libzstd.so.1
+    #usr/lib/libzstd.so.1.5.7
+    cp /usr/lib/libzstd* $pkgdir/opt/openmc-bin/lib/
+
+}

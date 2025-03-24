@@ -1,0 +1,4 @@
+post_install() {
+    echo 'Faz-se necessário colocar o comando abaixo no ~/.bashrc de cada usuário:'
+    echo '   source /opt/openmc-pythonenv/bin/activate'
+}

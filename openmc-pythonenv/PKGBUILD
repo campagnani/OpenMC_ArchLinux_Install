@@ -1,0 +1,43 @@
+pkgname=openmc-pythonenv
+pkgver=any
+pkgrel=1
+pkgdesc="Python env for OpenMC."
+arch=('x86_64')
+url="https://github.com/openmc-dev/openmc"
+license=('MIT')
+
+source=()
+
+md5sums=()
+
+depends=(
+    python
+    openmc-bin
+)
+
+makedepends=(
+    python
+    python-pip
+    openmc-bin
+)
+
+conflicts=()
+
+provides=("${pkgname%-pkgver}")
+
+build() {
+    cd $srcdir/                                     #Vá para o diretório do pacote
+    rm -rf openmc-pythonenv                         #Garantir que não tem resquicios de instalações passadas
+    python -m venv openmc-pythonenv                 #Criando ambiente
+    source openmc-pythonenv/bin/activate            #Ativando ambiente
+    cp -r /opt/openmc-bin/openmc-src/ . || true     #Copiando código fonte da versão instalada
+    cd openmc-src                                   #Mudando para pasta do código fonte
+    python -m pip install . mpi4py #scipy==1.11.4    #Instalando API do openmc no ambiênte + dependências + mpi4py + escificando versão do scipy==1.11.4 para evitar bug recente
+    cd ..                                           #Saindo da pasta com código fonte copiado
+    rm -rf ~/openmc-src/                            #Removendo pasta com código fonte copiado
+}
+
+package() {
+    mkdir $pkgdir/opt/                              #Crie pasta opt dentro do pacote
+    mv $srcdir/openmc-pythonenv $pkgdir/opt/        #Mova o ambiênte criado para a pasta opt do pacote
+}

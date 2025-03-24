@@ -1,0 +1,4 @@
+post_install() {
+    echo 'Faz-se necessário colocar o comando abaixo no ~/.bashrc de cada usuário:'
+    echo '   export LD_LIBRARY_PATH="/opt/openmc-bin/lib/:$LD_LIBRARY_PATH"'
+}
